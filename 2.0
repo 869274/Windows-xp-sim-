@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RetroCore Windows 5.0 – Ultimate Edition</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Tahoma', 'Segoe UI', sans-serif;
+      font-size: 11px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      cursor: default;
+      background: #000;
+    }
+
+    body.theme-blue {
+      --xp-blue: #245edb;
+      --xp-header: linear-gradient(to bottom, #245edb 0%, #3f8cf3 9%, #245edb 18%, #1b4ca3 100%);
+      --xp-taskbar: linear-gradient(to bottom, #245edb 0%, #3f8cf3 9%, #245edb 18%, #1b4ca3 92%, #163b7e 100%);
+      --xp-border: #245edb;
+    }
+    body.theme-silver {
+      --xp-blue: #8c8c9e;
+      --xp-header: linear-gradient(to bottom, #cfd0d8 0%, #ffffff 20%, #b4b7c7 40%, #8c8c9e 100%);
+      --xp-taskbar: linear-gradient(to bottom, #b4b7c7 0%, #ebecef 10%, #b4b7c7 20%, #7e8293 90%, #585a67 100%);
+      --xp-border: #8c8c9e;
+    }
+    body.theme-olive {
+      --xp-blue: #616e41;
+      --xp-header: linear-gradient(to bottom, #a2b473 0%, #cbd99d 10%, #a2b473 25%, #616e41 100%);
+      --xp-taskbar: linear-gradient(to bottom, #a2b473 0%, #cbd99d 10%, #a2b473 20%, #525e35 90%, #3d4626 100%);
+      --xp-border: #616e41;
+    }
+
+    body.bg-bliss {
+      background-image: url("https://www.windowslatest.com/wp-content/uploads/2024/10/Windows-XP-Bliss-Wallpaper-4K-scaled.jpg");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-color: #5d9ce6;
+      position: relative;
+    }
+    body.bg-bliss::before,
+    body.bg-bliss::after {
+      display: none;
+    }
+    body.bg-dark { background: #111111; }
+    body.bg-retro { background: #008080; }
+
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffe1;
+      color: #000;
+      border: 1px solid #000;
+      padding: 3px 6px;
+      font-size: 10px;
+      white-space: nowrap;
+      z-index: 999999;
+      display: none;
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      border-radius: 2px;
+    }
+    [data-tooltip]:hover::after { display: block; }
+
+    #touch-cursor {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 18px;
+      height: 22px;
+      pointer-events: none;
+      z-index: 2147483647;
+      opacity: 0;
+      transform: translate(-1px, -1px);
+      transition: opacity 0.08s ease;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+    }
+    #touch-cursor::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 15px;
+      height: 19px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.85);
+      clip-path: polygon(0% 0%, 68% 0%, 68% 34%, 100% 34%, 54% 100%, 54% 64%, 0% 64%);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    #touch-cursor::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    body.touch-cursor-visible #touch-cursor { opacity: 1; }
+
+    #boot-screen {
+      position: fixed; inset: 0; background: #000; z-index: 9999999;
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      font-family: "Segoe UI", Tahoma, sans-serif; overflow: hidden;
+    }
+    #boot-screen::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.02));
+      background-size: 100% 6px;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+    .boot-wrap {
+      position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transform: translateY(-14px); z-index: 1;
+    }
+    .xp-logo {
+      position: relative; width: 120px; height: 90px; margin-bottom: 20px;
+      transform: skewX(-8deg); filter: drop-shadow(0 0 12px rgba(255,255,255,0.08));
+    }
+    .xp-logo .pane {
+      position: absolute; width: 48px; height: 38px; border-radius: 5px 12px 5px 12px; overflow: hidden;
+    }
+    .xp-logo .pane.red { background: linear-gradient(135deg, #f3432d 0%, #be2011 100%); left: 0; top: 0; }
+    .xp-logo .pane.green { background: linear-gradient(135deg, #85cf3d 0%, #498d22 100%); left: 51px; top: 0; border-radius: 12px 5px 12px 5px; }
+    .xp-logo .pane.blue { background: linear-gradient(135deg, #1b7fe8 0%, #0d4bb3 100%); left: 0; top: 42px; border-radius: 12px 5px 12px 5px; }
+    .xp-logo .pane.yellow { background: linear-gradient(135deg, #f2c229 0%, #d19206 100%); left: 51px; top: 42px; border-radius: 5px 12px 5px 12px; }
+    .boot-brand { text-align: center; line-height: 1; }
+    .microsoft-label {
+      font-size: 13px; letter-spacing: 0.35px; color: rgba(255,255,255,0.92); margin-bottom: 4px; font-weight: 400;
+    }
+    .windows-line {
+      display: inline-flex; align-items: flex-end; gap: 10px; position: relative;
+    }
+    .windows-word { font-size: 58px; letter-spacing: -2px; font-weight: 700; color: #ffffff; line-height: 0.9; }
+    .xp-word {
+      font-size: 28px; font-weight: 900; letter-spacing: -1px; color: #ff7b1d; line-height: 1;
+      font-family: "Arial Black", Impact, sans-serif; transform: translateY(-6px);
+      text-shadow: 0 0 12px rgba(255,140,0,0.18);
+    }
+    .boot-progress {
+      position: relative; width: 170px; height: 14px; margin-top: 28px; border: 2px solid #8d8d8d; background: #000; overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+    .boot-progress-fill { position: absolute; inset: 0; overflow: hidden; }
+    .boot-progress-fill::before {
+      content: "";
+      position: absolute; left: -42%; top: 0; width: 32%; height: 100%;
+      background: linear-gradient(to right, #1456c7 0%, #2b7ef6 20%, #7cb7ff 45%, #2b7ef6 70%, #1456c7 100%);
+      box-shadow: 0 0 12px rgba(74, 143, 255, 0.8), inset 0 0 0 1px rgba(255,255,255,0.2);
+      animation: xpLoad 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    }
+    @keyframes xpLoad { 0% { left: -42%; } 100% { left: 112%; } }
+
+    .boot-footer {
+      position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: space-between; align-items: center;
+      padding: 0 30px; font-size: 12px; color: rgba(255,255,255,0.74); letter-spacing: 0.15px; z-index: 1;
+    }
+    .boot-footer .right { font-weight: 700; opacity: 0.9; }
+
+    #desktop {
+      width: 100%; height: calc(100vh - 30px); padding: 15px; display: flex; flex-direction: column; flex-wrap: wrap;
+      align-content: flex-start; gap: 18px; position: relative; z-index: 5;
+    }
+    .desktop-icon {
+      width: 90px; text-align: center; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+      text-shadow: 2px 2px 3px rgba(0,0,0,0.9); font-weight: 500; padding: 5px; border: 1px solid transparent; border-radius: 3px;
+      position: relative;
+      user-select: none;
+      touch-action: none;
+    }
+    .desktop-icon:hover { background-color: rgba(255,255,255,0.08); border-color: transparent; }
+    .desktop-icon .desktop-folder-icon {
+      display: inline-block; width: 42px; height: 38px; font-size: 46px; line-height: 1; margin-bottom: 6px;
+      transform: translateY(2px); filter: drop-shadow(0 2px 0 rgba(0,0,0,0.25));
+    }
+    .desktop-icon span:last-child {
+      display: block; line-height: 1.15; font-size: 12px;
+    }
+    .desktop-icon.dragging {
+      opacity: 0.45;
+      transform: scale(1.05);
+      z-index: 99999;
+    }
+    .desktop-icon.trashed {
+      display: none;
+    }
+
+    .window {
+      width: 500px; height: 360px; background: #f1f0e8; border: 3px solid var(--xp-border); border-top-left-radius: 7px; border-top-right-radius: 7px;
+      position: absolute; z-index: 100; display: none; box-shadow: 4px 6px 22px rgba(0,0,0,0.4); transform: scale(0.95); opacity: 0;
+      transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    }
+    .window.window-open { transform: scale(1); opacity: 1; }
+    .window-header {
+      background: var(--xp-header); color: white; font-weight: bold; padding: 5px 8px; font-size: 11px; display: flex;
+      justify-content: space-between; align-items: center; cursor: grab; touch-action: none; height: 26px;
+    }
+    .window-header:active { cursor: grabbing; }
+    .window-title-area { display: flex; align-items: center; gap: 6px; }
+    .window-title-icon { width: 14px; height: 14px; background: #fff; border-radius: 2px; display: inline-block; font-size: 8px; text-align: center; line-height: 14px; color: #333; }
+    .window-controls { display: flex; gap: 2px; }
+    .window-controls button {
+      color: white; font-weight: bold; font-size: 9px; border-radius: 2px; width: 22px; height: 18px; cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.3); padding: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .win-btn-min, .win-btn-max { background: linear-gradient(to bottom, #3c7be6, #1640a3); }
+    .win-btn-close { background: linear-gradient(to bottom, #e76446 0%, #b83314 100%); }
+    .win-btn-close:hover { background: #ff3300; }
+    .window-body {
+      padding: 10px; font-size: 11px; color: black; background: #fff; height: calc(100% - 26px); overflow: auto; position: relative;
+    }
+    .window.maximized { width: 100% !important; height: calc(100vh - 30px) !important; top: 0 !important; left: 0 !important; }
+
+    .explorer-layout { display: flex; height: 100%; }
+    .explorer-sidebar { width: 130px; background: #7b9ede; border-right: 1px solid #4b6da3; padding: 8px; color: white; }
+    .explorer-main { flex-grow: 1; padding: 10px; display: flex; flex-wrap: wrap; gap: 15px; background: #fff; align-content: flex-start; }
+    .sidebar-folder { padding: 6px; cursor: pointer; border-radius: 3px; font-weight: bold; margin-bottom: 5px; }
+    .sidebar-folder:hover { background-color: rgba(255,255,255,0.2); }
+    .explorer-item { width: 70px; text-align: center; cursor: pointer; font-size: 10px; }
+    .explorer-item img { width: 32px; height: 32px; display: block; margin: 0 auto 4px; }
+
+    .explorer-item-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 4px;
+      border: 1px solid #d9a100;
+      background: linear-gradient(to bottom, #f8d64b 0%, #f0c22c 100%);
+      color: #1a1a1a;
+      font-weight: bold;
+      font-size: 10px;
+      border-radius: 4px;
+      line-height: 1;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .folder-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 18px;
+      margin-right: 6px;
+      border: 1px solid #d9a100;
+      background: linear-gradient(to bottom, #f8d64b 0%, #f0c22c 100%);
+      color: #1a1a1a;
+      font-size: 8px;
+      font-weight: bold;
+      border-radius: 3px;
+      vertical-align: middle;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .nav-bar { display: flex; gap: 4px; margin-bottom: 8px; background: #f0f0f0; padding: 5px; border-bottom: 1px solid #ccc; align-items: center; }
+    .nav-input { flex-grow: 1; border: 1px solid #7f9db9; padding: 3px 6px; font-size: 11px; }
+    .nav-btn { background: #fff; border: 1px solid #a0a0a0; border-radius: 3px; cursor: pointer; padding: 3px 10px; font-weight: bold; }
+    .web-content { width: 100%; height: calc(100% - 40px); background: #fff; border: 1px solid #999; padding: 12px; overflow-y: auto; }
+
+    .search-page {
+      padding: 16px;
+      font-family: Tahoma, sans-serif;
+      background: #fff;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .search-header {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #1c2c6b;
+    }
+    .search-results {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .search-results li {
+      padding: 10px 12px;
+      border-bottom: 1px solid #dfeaf7;
+      font-size: 12px;
+      color: #1c2c6b;
+    }
+    .search-results li:first-child {
+      font-weight: bold;
+      background: #eef5ff;
+    }
+
+    #snakeGameCanvas { border: 2px solid var(--xp-border); background: #0d0d0d; display: block; margin: 0 auto; }
+    .snake-dashboard { display: flex; justify-content: space-between; font-weight: bold; background: #f0f0f0; padding: 6px; border-radius: 4px; margin-top: 6px; }
+
+    .ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ctrl-card { border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: #fdfdfd; }
+    .ctrl-card h5 { margin: 0 0 6px 0; font-size: 11px; color: #245edb; }
+
+    .player-box { background: #222; color: #00ff00; padding: 12px; border-radius: 6px; font-family: monospace; text-align: center; }
+    .player-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .player-btn { background: #444; border: 1px solid #666; color: white; padding: 4px 10px; cursor: pointer; font-size: 10px; font-family: monospace; }
+    .player-btn:hover { background: #666; }
+    .music-progress { width: 100%; background: #444; height: 6px; margin-top: 10px; border-radius: 3px; overflow: hidden; }
+    .music-bar { width: 0%; height: 100%; background: #00ff00; transition: width 0.5s linear; }
+
+    .notepad-textarea { width: 100%; height: calc(100% - 30px); border: 1px solid #ccc; resize: none; font-family: Courier, monospace; padding: 5px; font-size: 12px; }
+
+    .cmd-box { background: #000; color: #fff; font-family: monospace; height: 100%; padding: 5px; overflow-y: auto; }
+    .cmd-output { white-space: pre-wrap; margin-bottom: 5px; line-height: 1.3; }
+    .cmd-input-line { display: flex; }
+    .cmd-prompt { color: #00ff00; font-weight: bold; margin-right: 5px; }
+    .cmd-field { background: transparent; border: none; color: white; font-family: monospace; outline: none; flex-grow: 1; font-size: 11px; }
+
+    #start-menu {
+      position: fixed; bottom: 30px; left: 0; width: 280px; background: #fff; border: 2px solid var(--xp-border);
+      border-top-right-radius: 5px; box-shadow: 3px -3px 20px rgba(0,0,0,0.4); display: none; z-index: 99999;
+    }
+    .start-header { background: var(--xp-header); color: white; padding: 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .start-header img { width: 24px; height: 24px; border-radius: 50%; border: 1px solid white; }
+    .start-menu-list { padding: 4px 0; background: #fff; position: relative; }
+    .start-menu-item { padding: 8px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #333; position: relative; }
+    .start-menu-item:hover { background-color: #316ac5; color: white; }
+    .start-submenu {
+      position: absolute; left: 100%; top: 0; width: 180px; background: white; border: 2px solid var(--xp-border); display: none;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.2); z-index: 100000; padding: 4px 0;
+    }
+    .start-menu-item:hover > .start-submenu { display: block; }
+    .submenu-item { padding: 6px 12px; color: #333; cursor: pointer; }
+    .submenu-item:hover { background: #316ac5; color: white; }
+    .start-footer { background: #d3e5fa; padding: 6px; text-align: right; border-top: 1px solid #a2c1e8; }
+    .shutdown-btn { background: linear-gradient(to bottom, #e76446, #b83314); color: white; border: 1px solid #7a1b07; padding: 4px 10px; font-weight: bold; cursor: pointer; border-radius: 3px; }
+
+    #shutdown-dialog {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; background: #5a7edc;
+      border: 3px solid #0011a0; border-radius: 6px; padding: 15px; color: white; text-align: center; z-index: 999998; display: none;
+      box-shadow: 0px 10px 30px rgba(0,0,0,0.6);
+    }
+    .shutdown-options { display: flex; justify-content: space-around; margin-top: 15px; }
+    .shutdown-opt-btn { background: #f0f0f0; border: 2px solid #333; border-radius: 4px; padding: 6px 12px; font-weight: bold; cursor: pointer; color: black; }
+    .shutdown-opt-btn:hover { background: #ddd; }
+
+    #taskbar {
+      background: var(--xp-taskbar); position: fixed; bottom: 0; left: 0; width: 100%; height: 30px; display: flex; align-items: center; z-index: 99999;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.4);
+    }
+    #start-button {
+      height: 100%; width: 100px; background: linear-gradient(to bottom, #60af47, #398a23); border-top-right-radius: 7px; border-bottom-right-radius: 7px;
+      color: white; font-weight: bold; font-style: italic; font-size: 13pt; display: flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; text-shadow: 1px 1px 2px #225511; border: none; padding: 0 10px 0 8px;
+    }
+    #start-button:active { background: linear-gradient(to bottom, #398a23, #296419); }
+
+    .start-logo {
+      position: relative; width: 16px; height: 14px; flex-shrink: 0; display: inline-block; transform: skewX(-10deg);
+      filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+    }
+    .start-pane { position: absolute; width: 7px; height: 6px; border-radius: 2px; }
+    .pane-red { background: linear-gradient(135deg, #ef4c2d, #c42512); top: 0; left: 0; }
+    .pane-green { background: linear-gradient(135deg, #7ecb35, #4d8f20); top: 0; left: 7px; }
+    .pane-blue { background: linear-gradient(135deg, #1b73dc, #1248a8); top: 6px; left: 0; }
+    .pane-yellow { background: linear-gradient(135deg, #ffc12b, #d59b0a); top: 6px; left: 7px; }
+    .start-text { line-height: 1; display: inline-block; transform: translateY(-1px); }
+
+    #open-apps-container { display: flex; gap: 4px; margin-left: 10px; align-items: center; }
+    .taskbar-app-btn {
+      background: linear-gradient(to bottom, #3c7be6, #1f4994); color: white; border: 1px solid #112a59; border-radius: 3px; padding: 2px 8px; height: 24px;
+      cursor: pointer; font-size: 10px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .taskbar-app-btn.active-app { background: #1e4287; font-weight: bold; border-color: #fff; }
+
+    #taskbar-right {
+      margin-left: auto; background: linear-gradient(to bottom, #0f69e4, #0046b7); color: white; height: 100%; display: flex; align-items: center; gap: 8px;
+      padding: 0 12px; font-size: 10px; border-left: 1px solid #0c3374;
+    }
+    .stream-toggle-tb {
+      background: linear-gradient(to bottom, #2ea0ff 0%, #0d6ad9 100%);
+      border: 1px solid #0a4ba3;
+      color: #fff;
+      padding: 2px 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 2px;
+      font-size: 12px;
+      line-height: 1;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+
+    @keyframes windowVibrate { 0% { transform: translate(1px, 1px) rotate(0deg); } 50% { transform: translate(-2px, -1px) rotate(1deg); } 100% { transform: translate(2px, -1px) rotate(-1deg); } }
+    .vibrate-active { animation: windowVibrate 0.1s infinite !important; }
+
+    #virus-ransom-box {
+      position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 360px; background: #fff; border: 4px solid #cc0000;
+      z-index: 999997; box-shadow: 0 0 30px rgba(255,0,0,0.8); display: none; padding: 15px; text-align: center;
+    }
+    #bsod {
+      position: fixed; inset: 0; background-color: #0000aa; color: white; font-family: 'Courier New', monospace; padding: 50px; font-size: 12pt;
+      z-index: 9999999; display: none; line-height: 1.5;
+    }
+
+    .snake-mobile-controls {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .snake-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(3, 42px);
+      gap: 5px;
+      user-select: none;
+    }
+    .pad-btn {
+      background: linear-gradient(to bottom, #a7b9ff, #6a7fdd);
+      border: 1px solid #33469d;
+      color: #fff; border-radius: 8px; font-weight: bold; font-size: 18px;
+      touch-action: manipulation; user-select: none;
+    }
+    .pad-btn:active { filter: brightness(1.15); }
+
+    .pad-up { grid-column: 2; grid-row: 1; }
+    .pad-left { grid-column: 1; grid-row: 2; }
+    .pad-down { grid-column: 2; grid-row: 2; }
+    .pad-right { grid-column: 3; grid-row: 2; }
+    .pad-center { grid-column: 2; grid-row: 3; }
+
+    @media (max-width: 900px) {
+      .snake-mobile-controls { display: flex; }
+      #snakeGameCanvas { width: min(86vw, 300px); height: auto; }
+      .window { width: min(86vw, 420px); }
+      .desktop-icon { width: 74px; }
+      .desktop-icon span:last-child { font-size: 11px; }
+    }
+  </style>
+</head>
+<body class="theme-blue bg-bliss">
+  <div id="touch-cursor"></div>
+
+  <div id="boot-screen">
+    <div class="boot-wrap">
+      <div class="xp-logo" aria-hidden="true">
+        <span class="pane red"></span>
+        <span class="pane green"></span>
+        <span class="pane blue"></span>
+        <span class="pane yellow"></span>
+      </div>
+
+      <div class="boot-brand">
+        <div class="microsoft-label">microsoft TM</div>
+        <div class="windows-line">
+          <span class="windows-word">Windows</span>
+          <span class="xp-word">XP</span>
+        </div>
+      </div>
+
+      <div class="boot-progress" aria-label="Loading">
+        <div class="boot-progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="boot-footer">
+      <div class="left">Copyright © Microsoft Corporation</div>
+      <div class="right">Microsoft</div>
+    </div>
+  </div>
+
+  <div id="desktop">
+    <div class="desktop-icon" data-icon="superwium" onclick="openWindow('win-superwium')" data-tooltip="SuperWium 4.0 Web Browser">
+      <span class="desktop-folder-icon">📁</span>
+      <span>SuperWium 4.0</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="snake" onclick="openWindow('win-snake')" data-tooltip="Snake Game Ultra Edition">
+      <span class="desktop-folder-icon">📁</span>
+      <span>Snake Ultra</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="virus" onclick="openWindow('win-virus')" data-tooltip="Malware Demo Lab">
+      <span class="desktop-folder-icon">📁</span>
+      <span>Virus Lab Xtreme</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="explorer" onclick="openWindow('win-explorer')" data-tooltip="RetroCore File Explorer">
+      <span class="desktop-folder-icon">📁</span>
+      <span>Explorer</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="control" onclick="openWindow('win-control')" data-tooltip="System Settings and Themes">
+      <span class="desktop-folder-icon">📁</span>
+      <span>Control Panel</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="music" onclick="openWindow('win-music')" data-tooltip="RetroMusic Player">
+      <span class="desktop-folder-icon">📁</span>
+      <span>RetroMusic</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="notepad" onclick="openWindow('win-notepad')" data-tooltip="Simple Text Editor">
+      <span class="desktop-folder-icon">📁</span>
+      <span>Notepad</span>
+    </div>
+
+    <div class="desktop-icon" data-icon="cmd" onclick="openWindow('win-cmd')" data-tooltip="RetroCore Terminal">
+      <span class="desktop-folder-icon">📁</span>
+      <span>CMD</span>
+    </div>
+
+    <div class="desktop-icon" id="recycle-bin-desktop" data-icon="recycle" onclick="openWindow('win-recycle')" data-tooltip="Recycle Bin">
+      <span class="desktop-folder-icon">🗑️</span>
+      <span>Recycle Bin</span>
+    </div>
+  </div>
+
+  <div class="window" id="win-explorer" style="left: 60px; top: 40px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">📂</span> <span>File Explorer</span></div>
+      <div class="window-controls">
+        <button class="win-btn-min" onclick="minimizeWindow('win-explorer')">_</button>
+        <button class="win-btn-max" onclick="maximizeWindow('win-explorer')">[]</button>
+        <button class="win-btn-close" onclick="closeWindow('win-explorer')">X</button>
+      </div>
+    </div>
+    <div class="window-body" style="padding:0;">
+      <div class="explorer-layout">
+        <div class="explorer-sidebar">
+          <div class="sidebar-folder" onclick="loadFolder('docs')"><span class="folder-pill">📂</span>my personal documents</div>
+          <div class="sidebar-folder" onclick="loadFolder('downloads')"><span class="folder-pill">📂</span>loadable games</div>
+          <div class="sidebar-folder" onclick="loadFolder('games')"><span class="folder-pill">📂</span> launches </div>
+          <div class="sidebar-folder" onclick="loadFolder('logs')"><span class="folder-pill">📂</span>games</div>
+        </div>
+        <div class="explorer-main" id="explorer-content">
+          <p style="color: #666; width: 100%; text-align: center; margin-top: 40px;">Select a folder from the left panel to view its contents.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="win-superwium" style="left: 100px; top: 60px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">🌐</span> <span>SuperWium 4.0 Pro Navigator</span></div>
+      <div class="window-controls">
+        <button class="win-btn-min" onclick="minimizeWindow('win-superwium')">_</button>
+        <button class="win-btn-max" onclick="maximizeWindow('win-superwium')">[]</button>
+        <button class="win-btn-close" onclick="closeWindow('win-superwium')">X</button>
+      </div>
+    </div>
+    <div class="window-body" style="padding:0;">
+      <div class="nav-bar">
+        <button class="nav-btn" id="browser-go-button" type="button">🏠 Home</button>
+        <input type="text" class="nav-input" id="browser-url-bar" value="https://superwium.net/v4" placeholder="Search or enter a URL">
+        <button class="nav-btn" id="browser-go" type="button">Go</button>
+      </div>
+      <div class="web-content" id="browser-viewport">
+        <h3>Welcome to SuperWium 4.0 Pro Engine</h3>
+        <p>Integrated browser optimized for retro creators. Available sites:</p>
+        <ul>
+          <li><a href="#" onclick="loadWeb('roblox')">Roblox Studio Portal</a></li>
+          <li><a href="#" onclick="loadWeb('youtube')">YouTube Analytics Dashboard</a></li>
+          <li><a href="#" onclick="loadWeb('news')">RetroCore News Portal</a></li>
+          <li><a href="#" onclick="loadWeb('changelog')">Official Changelog v5.0</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="win-snake" style="left: 140px; top: 90px; width: 360px; height: 350px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">🎮</span> <span>Snake Arcade Ultra</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-snake')">X</button></div>
+    </div>
+    <div class="window-body">
+      <canvas id="snakeGameCanvas" width="320" height="220"></canvas>
+      <div class="snake-dashboard">
+        <div>Score: <span id="s-score">0</span></div>
+        <div>Best: <span id="s-high">0</span></div>
+        <div>Mode: <span id="s-mode-lbl">Normal</span></div>
+      </div>
+      <div style="display:flex; gap: 4px; justify-content: center; margin-top:6px;">
+        <button class="nav-btn" onclick="setSnakeMode('normal')">Normal</button>
+        <button class="nav-btn" onclick="setSnakeMode('turbo')">Turbo</button>
+        <button class="nav-btn" onclick="setSnakeMode('infinite')">Infinite</button>
+      </div>
+
+      <div class="snake-mobile-controls">
+        <div class="snake-pad" aria-label="mobile snake controls">
+          <button class="pad-btn pad-up" data-dir="UP">▲</button>
+          <button class="pad-btn pad-left" data-dir="LEFT">◀</button>
+          <button class="pad-btn pad-down" data-dir="DOWN">▼</button>
+          <button class="pad-btn pad-right" data-dir="RIGHT">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="win-virus" style="left: 180px; top: 120px; width: 380px; height: 220px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">🧪</span> <span>Virus Lab Xtreme – Safe Sandbox</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-virus')">X</button></div>
+    </div>
+    <div class="window-body" id="virus-lab-body" style="text-align: center;">
+      <h4>Advanced Laboratory Malware Simulator</h4>
+      <p>Run a harmless 4-stage visual demo to impress your stream audience.</p>
+      <button onclick="runVirusStage1()" style="background: linear-gradient(to bottom, #ff4d4d, #cc0000); color:white; font-weight:bold; padding:8px 16px; border:1px solid #990000; cursor:pointer;">Launch Demo</button>
+    </div>
+  </div>
+
+  <div class="window" id="win-control" style="left: 220px; top: 140px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">⚙️</span> <span>RetroCore Control Panel</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-control')">X</button></div>
+    </div>
+    <div class="window-body">
+      <div class="ctrl-grid">
+        <div class="ctrl-card">
+          <h5>Window Themes</h5>
+          <select onchange="changeTheme(this.value)" style="width:100%;">
+            <option value="theme-blue">Classic Blue Moon</option>
+            <option value="theme-silver">Metal Silver</option>
+            <option value="theme-olive">Olive Forest</option>
+          </select>
+        </div>
+        <div class="ctrl-card">
+          <h5>Desktop Backgrounds</h5>
+          <select onchange="changeBg(this.value)" style="width:100%;">
+            <option value="bg-bliss">Original XP Bliss</option>
+            <option value="bg-retro">Classic Solid Green</option>
+            <option value="bg-dark">Dark Gamer Mode</option>
+          </select>
+        </div>
+        <div class="ctrl-card">
+          <h5>System Audio</h5>
+          <button class="nav-btn" onclick="alert('Core sound effects: ENABLED')">Enable Sounds</button>
+        </div>
+        <div class="ctrl-card">
+          <h5>Internal Info</h5>
+          <p style="margin:2px 0;"><b>OS:</b> Windows 5.0 Ultimate</p>
+          <p style="margin:2px 0;"><b>Dev:</b> Angelo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="win-music" style="left: 260px; top: 170px; width: 340px; height: 180px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">🎵</span> <span>RetroMusic Player v5.0</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-music')">X</button></div>
+    </div>
+    <div class="window-body">
+      <div class="player-box">
+        <div id="track-title" style="font-weight:bold; margin-bottom:4px;">[No track loaded]</div>
+        <div id="track-status">Status: Stopped</div>
+        <div class="music-progress"><div class="music-bar" id="m-bar"></div></div>
+        <div class="player-controls">
+          <button class="player-btn" onclick="controlMusic('prev')">⏮ Prev</button>
+          <button class="player-btn" onclick="controlMusic('play')">▶ Play</button>
+          <button class="player-btn" onclick="controlMusic('pause')">⏸ Pause</button>
+          <button class="player-btn" onclick="controlMusic('next')">⏭ Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window" id="win-notepad" style="left: 300px; top: 80px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">📝</span> <span>Retro Notepad</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-notepad')">X</button></div>
+    </div>
+    <div class="window-body" style="padding:4px;">
+      <div style="background:#eee; padding:2px; margin-bottom:4px; display:flex; gap:5px;">
+        <button onclick="alert('Note saved to My Documents.')" style="font-size:10px; cursor:pointer;">Save</button>
+        <button onclick="document.getElementById('note-text').value=''" style="font-size:10px; cursor:pointer;">Clear</button>
+        <button onclick="document.getElementById('note-text').value='Stream ideas:\n1. Test the final virus stage\n2. Set a new snake record\n3. Say hello to the community'" style="font-size:10px; cursor:pointer;">Template</button>
+      </div>
+      <textarea class="notepad-textarea" id="note-text" placeholder="Write your notes here..."></textarea>
+    </div>
+  </div>
+
+  <div class="window" id="win-cmd" style="left: 80px; top: 190px; width: 440px; height: 300px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">💻</span> <span>CMD RetroCore Terminal</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-cmd')">X</button></div>
+    </div>
+    <div class="window-body" style="padding:0; background:#000;">
+      <div class="cmd-box" onclick="document.getElementById('cmd-input-field').focus()">
+        <div id="cmd-history" class="cmd-output">RetroCore Windows 5.0 [Ultimate Version 2026]
+(C) RetroCore OS Corporation. Type 'help' to view commands.</div>
+        <div class="cmd-input-line">
+          <span class="cmd-prompt">C:\Angelo_OS></span>
+          <input type="text" id="cmd-input-field" class="cmd-field" onkeydown="handleCmd(event)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-recycle" class="window" style="left: 210px; top: 210px; width: 360px; height: 220px;">
+    <div class="window-header">
+      <div class="window-title-area"><span class="window-title-icon">🗑️</span> <span>Recycle Bin</span></div>
+      <div class="window-controls"><button class="win-btn-close" onclick="closeWindow('win-recycle')">X</button></div>
+    </div>
+    <div class="window-body" style="text-align:center;">
+      <h4>Recycle Bin</h4>
+      <p>Nothing is deleted from this simulation.</p>
+      <button class="nav-btn" onclick="alert('Recycle bin has been emptied.')">Empty Recycle Bin</button>
+      <div style="margin-top:18px; font-size: 18px;">🗑️</div>
+    </div>
+  </div>
+
+  <div id="virus-ransom-box">
+    <h3 style="color:red; margin-top:0;">⚠️ SYSTEM LOCKED (SIMULATION) ⚠️</h3>
+    <p>Desktop visual drivers have been temporarily compromised by this demonstration.</p>
+    <button onclick="triggerBsodStage4()" style="padding:6px 20px; font-weight:bold; cursor:pointer; background:black; color:white; border:none;">Accept Fatal Code</button>
+  </div>
+
+  <div id="bsod">
+    <span style="background:white; color:#0000aa; font-weight:bold; padding:2px 8px; display:inline-block; margin-bottom:15px;">RetroCore Core System Error</span>
+    <p>A fictional fatal error has stopped the operating core for stream entertainment.</p>
+    <p><b>TECHNICAL_ERROR_ID: 0x0000XP_ULTIMATE_COMPLETE_STAGE_4</b></p>
+    <p>If you are seeing this on YouTube, the 4-stage malware simulation worked perfectly on screen.</p>
+    <br>
+    <p>Press <b>F5</b> on your keyboard to reload scripts and restart RetroCore Windows 5.0...</p>
+  </div>
+
+  <div id="start-menu">
+    <div class="start-header">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAMFBMVEUAAAD///+ZmZnMzMzcnJz8/PwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB69u7SAAAAAXRSTlMAQObYZgAAADlJREF" alt="User profile" />
+      <span>Jaxon_Wiberg</span>
+    </div>
+    <div class="start-menu-list">
+      <div class="start-menu-item">
+        <span>📁 Programs</span> <span>▶</span>
+        <div class="start-submenu">
+          <div class="submenu-item" onclick="openWindow('win-superwium'); toggleStartMenu();">🌐 SuperWium 4.0</div>
+          <div class="submenu-item" onclick="openWindow('win-notepad'); toggleStartMenu();">📝 Notepad</div>
+          <div class="submenu-item" onclick="openWindow('win-cmd'); toggleStartMenu();">💻 CMD Terminal</div>
+        </div>
+      </div>
+      <div class="start-menu-item">
+        <span>🎮 Games</span> <span>▶</span>
+        <div class="start-submenu">
+          <div class="submenu-item" onclick="openWindow('win-snake'); toggleStartMenu();">🐍 Snake Ultra Pro</div>
+        </div>
+      </div>
+      <div class="start-menu-item">
+        <span>🛠️ Tools</span> <span>▶</span>
+        <div class="start-submenu">
+          <div class="submenu-item" onclick="openWindow('win-virus'); toggleStartMenu();">🧪 Virus Lab Xtreme</div>
+          <div class="submenu-item" onclick="openWindow('win-explorer'); toggleStartMenu();">📂 PC Explorer</div>
+          <div class="submenu-item" onclick="openWindow('win-recycle'); toggleStartMenu();">🗑️ Recycle Bin</div>
+        </div>
+      </div>
+      <div class="start-menu-item">
+        <span>⚙️ Settings</span> <span>▶</span>
+        <div class="start-submenu">
+          <div class="submenu-item" onclick="openWindow('win-control'); toggleStartMenu();">⚙️ Control Panel</div>
+        </div>
+      </div>
+      <div class="start-menu-item" onclick="openWindow('win-music'); toggleStartMenu();">🎵 RetroMusic Player</div>
+    </div>
+    <div class="start-footer">
+      <button class="shutdown-btn" onclick="toggleShutdownDialog(true)">Shut Down</button>
+    </div>
+  </div>
+
+  <div id="shutdown-dialog">
+    <h4>What would you like RetroCore OS to do?</h4>
+    <div class="shutdown-options">
+      <button class="shutdown-opt-btn" onclick="alert('Shutting down... clean simulation complete.'); location.reload();">Power Off</button>
+      <button class="shutdown-opt-btn" onclick="alert('Restarting modules...'); location.reload();">Restart</button>
+      <button class="shutdown-opt-btn" onclick="toggleShutdownDialog(false)" style="background:#ff9999;">Cancel</button>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <button id="start-button" onclick="toggleStartMenu()" data-tooltip="Click here to open apps">
+      <span class="start-logo" aria-hidden="true">
+        <span class="start-pane pane-red"></span>
+        <span class="start-pane pane-green"></span>
+        <span class="start-pane pane-blue"></span>
+        <span class="start-pane pane-yellow"></span>
+      </span>
+      <span class="start-text">start</span>
+    </button>
+    <div id="open-apps-container"></div>
+    <div id="taskbar-right">
+      <button class="stream-toggle-tb" id="s-btn-mode" type="button" onclick="return false;" aria-label="hi">🔰🌐⛔️</button>
+      <span id="digital-clock" data-tooltip="Local server time">00:00:00 PM</span>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      const boot = document.getElementById('boot-screen');
+      if (boot) boot.style.display = 'none';
+    }, 2800);
+
+    let startOpen = false;
+    function toggleStartMenu() {
+      startOpen = !startOpen;
+      document.getElementById('start-menu').style.display = startOpen ? 'block' : 'none';
+    }
+    function toggleShutdownDialog(show) {
+      if (startOpen) toggleStartMenu();
+      document.getElementById('shutdown-dialog').style.display = show ? 'block' : 'none';
+    }
+
+    let topZ = 100;
+    const openApps = {};
+    function openWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.style.display = 'block';
+      setTimeout(() => win.classList.add('window-open'), 10);
+      win.style.zIndex = ++topZ;
+      openApps[id] = true;
+      renderTaskbarApps();
+    }
+    function closeWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.remove('window-open');
+      setTimeout(() => win.style.display = 'none', 150);
+      delete openApps[id];
+      renderTaskbarApps();
+    }
+    function minimizeWindow(id) {
+      const win = document.getElementById(id);
+      if (win) win.style.display = 'none';
+    }
+    function maximizeWindow(id) {
+      const win = document.getElementById(id);
+      if (win) win.classList.toggle('maximized');
+    }
+    function renderTaskbarApps() {
+      const container = document.getElementById('open-apps-container');
+      container.innerHTML = '';
+      for (const id in openApps) {
+        const btn = document.createElement('button');
+        btn.className = 'taskbar-app-btn';
+        const name = id.replace('win-', '').toUpperCase();
+        btn.textContent = name;
+        btn.onclick = () => {
+          const win = document.getElementById(id);
+          if (win.style.display === 'none') {
+            win.style.display = 'block';
+            win.style.zIndex = ++topZ;
+          } else {
+            win.style.zIndex = ++topZ;
+          }
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    const touchCursor = document.getElementById('touch-cursor');
+    function updateTouchCursor(e) {
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        document.body.classList.add('touch-cursor-visible');
+        touchCursor.style.left = e.clientX + 'px';
+        touchCursor.style.top = e.clientY + 'px';
+      } else {
+        document.body.classList.remove('touch-cursor-visible');
+      }
+    }
+    document.addEventListener('pointermove', updateTouchCursor);
+    document.addEventListener('pointerdown', updateTouchCursor);
+    document.addEventListener('pointerleave', () => {
+      document.body.classList.remove('touch-cursor-visible');
+    });
+
+    document.querySelectorAll('.window').forEach(win => {
+      const header = win.querySelector('.window-header');
+      if (!header) return;
+      let dragState = null;
+
+      function endDrag() {
+        if (!dragState) return;
+        dragState = null;
+        header.style.cursor = 'grab';
+        win.classList.remove('dragging');
+      }
+
+      header.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+        const rect = win.getBoundingClientRect();
+        dragState = {
+          win,
+          startX: e.clientX,
+          startY: e.clientY,
+          origLeft: rect.left,
+          origTop: rect.top
+        };
+
+        header.setPointerCapture?.(e.pointerId);
+        win.classList.add('dragging');
+        header.style.cursor = 'grabbing';
+
+        e.preventDefault();
+      });
+
+      header.addEventListener('pointermove', (e) => {
+        if (!dragState) return;
+
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+
+        let nextLeft = dragState.origLeft + dx;
+        let nextTop = dragState.origTop + dy;
+
+        if (nextTop < 0) nextTop = 0;
+        if (nextLeft < 0) nextLeft = 0;
+
+        win.style.left = nextLeft + 'px';
+        win.style.top = nextTop + 'px';
+      });
+
+      header.addEventListener('pointerup', endDrag);
+      header.addEventListener('pointercancel', endDrag);
+      header.addEventListener('lostpointercapture', endDrag);
+    });
+
+    function changeTheme(theme) {
+      document.body.className = document.body.className.replace(/theme-\w+/g, theme);
+    }
+    function changeBg(bg) {
+      document.body.className = document.body.className.replace(/bg-\w+/g, bg);
+    }
+
+    const folderData = {
+      docs: ['top', 'top', 'top'],
+      downloads: ['top', 'top', 'top'],
+      games: ['top', 'top', 'top'],
+      logs: ['top', 'top', 'top']
+    };
+    function loadFolder(folderKey) {
+      const main = document.getElementById('explorer-content');
+      main.innerHTML = '';
+      folderData[folderKey].forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'explorer-item';
+        div.innerHTML = '<div class=\"explorer-item-icon\">📄</div>' + item;
+        div.onclick = () => alert('Opening simulated file: ' + item);
+        main.appendChild(div);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>\"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function renderSearchResults(query) {
+      const safeQuery = escapeHtml(query.trim() || 'Search');
+      const view = document.getElementById('browser-viewport');
+      const results = [
+        safeQuery,
+        'Search results for ' + safeQuery,
+        'Related pages about ' + safeQuery,
+        'How to use ' + safeQuery,
+        'More info on ' + safeQuery
+      ];
+
+      view.innerHTML = `
+        <div class="search-page">
+          <div class="search-header">Results for: "${safeQuery}"</div>
+          <ol class="search-results">
+            ${results.map((item, index) => `<li>${index + 1}. ${item}</li>`).join('')}
+          </ol>
+        </div>
+      `;
+    }
+
+    function goSuperWium() {
+      const input = document.getElementById('browser-url-bar');
+      const query = input.value.trim();
+      if (!query) return;
+      const lower = query.toLowerCase();
+      if (lower.startsWith('http://') || lower.startsWith('https://')) {
+        document.getElementById('browser-viewport').innerHTML = `
+          <div class="search-page">
+            <div class="search-header">Page Loaded</div>
+            <ol class="search-results">
+              <li>1. ${escapeHtml(query)}</li>
+              <li>2. Opened link: ${escapeHtml(query)}</li>
+              <li>3. Page preview ready</li>
+            </ol>
+          </div>
+        `;
+        return;
+      }
+      renderSearchResults(query);
+    }
+
+    document.getElementById('browser-go').addEventListener('click', goSuperWium);
+    document.getElementById('browser-url-bar').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') goSuperWium();
+    });
+
+    function loadWeb(site) {
+      const view = document.getElementById('browser-viewport');
+      const bar = document.getElementById('browser-url-bar');
+      if (site === 'home') {
+        bar.value = 'https://superwium.net/v4';
+        view.innerHTML = '<h3>SuperWium 4.0 Core Engine</h3><p>You are on the main secure index.</p>';
+      } else if (site === 'roblox') {
+        bar.value = 'https://roblox.com/studio_hub';
+        view.innerHTML = '<h3>Roblox Developer Portal</h3><p style="color:#00aa00; font-weight:bold;">Synced with Brookhaven Military Base.</p><p>Status: Ready for streaming.</p>';
+      } else if (site === 'youtube') {
+        bar.value = 'https://studio.youtube.com/channel/c00lkidd_v2yt';
+        view.innerHTML = '<h3>Channel Statistics</h3><p>Current community progress:</p><h4 style="color:#ff0055;">Subscribers: 90 / 100 (10 left for the special release)</h4>';
+      } else if (site === 'news') {
+        bar.value = 'https://retrocore-news.org/xp_systems';
+        view.innerHTML = '<h3>RetroCore News Portal</h3><p>Virtual environment development has reached version 5.0 with full support for phonk music.</p>';
+      } else if (site === 'changelog') {
+        bar.value = 'https://retrocore.net/changelog5';
+        view.innerHTML = '<h3>RetroCore 5.0 Ultimate Highlights</h3><ul><li>Interactive CMD integration</li><li>Submenus added to the start button</li><li>Colorful border effects and live streamer overlays</li></ul>';
+      }
+    }
+
+    const canvas = document.getElementById('snakeGameCanvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = 10;
+    let snake, food, score, maxScore, snakeDir, gameInterval, snakeSpeed;
+    let snakeMode = 'normal';
+    let touchStart = null;
+
+    maxScore = Number(localStorage.getItem('retroSnakeMax')) || 0;
+    document.getElementById('s-high').textContent = maxScore;
+
+    function startSnake() {
+      clearInterval(gameInterval);
+      score = 0;
+      snakeDir = 'RIGHT';
+      document.getElementById('s-score').textContent = score;
+      snake = [
+        { x: 15 * boxSize, y: 10 * boxSize },
+        { x: 14 * boxSize, y: 10 * boxSize },
+        { x: 13 * boxSize, y: 10 * boxSize }
+      ];
+      spawnSnakeFood();
+      snakeSpeed = snakeMode === 'turbo' ? 45 : 100;
+      gameInterval = setInterval(gameStep, snakeSpeed);
+    }
+
+    function spawnSnakeFood() {
+      food = {
+        x: Math.floor(Math.random() * 32) * boxSize,
+        y: Math.floor(Math.random() * 22) * boxSize
+      };
+      for (let i = 0; i < snake.length; i++) {
+        if (snake[i].x === food.x && snake[i].y === food.y) {
+          spawnSnakeFood();
+          return;
+        }
+      }
+    }
+
+    function setSnakeMode(mode) {
+      snakeMode = mode;
+      document.getElementById('s-mode-lbl').textContent = mode.toUpperCase();
+      startSnake();
+    }
+
+    document.addEventListener('keydown', e => {
+      const key = e.key.toLowerCase();
+      if (key === 'arrowleft' || e.keyCode === 37) setSnakeDirection('LEFT');
+      if (key === 'arrowup' || e.keyCode === 38) setSnakeDirection('UP');
+      if (key === 'arrowright' || e.keyCode === 39) setSnakeDirection('RIGHT');
+      if (key === 'arrowdown' || e.keyCode === 40) setSnakeDirection('DOWN');
+    });
+
+    function setSnakeDirection(dir) {
+      const opposite = {
+        LEFT: 'RIGHT',
+        RIGHT: 'LEFT',
+        UP: 'DOWN',
+        DOWN: 'UP'
+      };
+      if (snakeDir && opposite[dir] === snakeDir) return;
+      snakeDir = dir;
+    }
+
+    function gameStep() {
+      ctx.fillStyle = '#0d0d0d';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i == 0 ? '#398a23' : '#ffffff';
+        ctx.fillRect(snake[i].x, snake[i].y, boxSize, boxSize);
+      }
+
+      ctx.fillStyle = '#ff3333';
+      ctx.fillRect(food.x, food.y, boxSize, boxSize);
+
+      let headX = snake[0].x;
+      let headY = snake[0].y;
+
+      if (snakeDir === 'LEFT') headX -= boxSize;
+      if (snakeDir === 'UP') headY -= boxSize;
+      if (snakeDir === 'RIGHT') headX += boxSize;
+      if (snakeDir === 'DOWN') headY += boxSize;
+
+      if (snakeMode === 'infinite') {
+        if (headX < 0) headX = canvas.width - boxSize;
+        if (headX >= canvas.width) headX = 0;
+        if (headY < 0) headY = canvas.height - boxSize;
+        if (headY >= canvas.height) headY = 0;
+      }
+
+      const nextHead = { x: headX, y: headY };
+      if (snakeMode !== 'infinite' && (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height)) {
+        endSnakeGame();
+        return;
+      }
+
+      if (snake.some(s => s.x === nextHead.x && s.y === nextHead.y)) {
+        if (snake[0].x !== nextHead.x || snake[0].y !== nextHead.y) {
+          endSnakeGame();
+          return;
+        }
+      }
+
+      if (headX === food.x && headY === food.y) {
+        score++;
+        document.getElementById('s-score').textContent = score;
+        playOscillatorSound(880, 60);
+        if (score > maxScore) {
+          maxScore = score;
+          localStorage.setItem('retroSnakeMax', maxScore);
+          document.getElementById('s-high').textContent = maxScore;
+        }
+        snake.unshift(nextHead);
+        spawnSnakeFood();
+      } else {
+        snake.pop();
+        snake.unshift(nextHead);
+      }
+    }
+
+    function endSnakeGame() {
+      clearInterval(gameInterval);
+      playOscillatorSound(180, 350);
+      ctx.fillStyle = 'orange';
+      ctx.font = '14pt monospace';
+      ctx.fillText('CANCELLED / GAME OVER', 60, 110);
+    }
+
+    function bindSnakeTouchControls() {
+      document.querySelectorAll('.pad-btn').forEach(btn => {
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          setSnakeDirection(btn.dataset.dir);
+        });
+      });
+
+      document.getElementById('snakeGameCanvas').addEventListener('touchstart', (e) => {
+        if (e.touches.length) {
+          const t = e.touches[0];
+          touchStart = { x: t.clientX, y: t.clientY };
+        }
+      }, { passive: true });
+
+      document.getElementById('snakeGameCanvas').addEventListener('touchend', (e) => {
+        if (!touchStart) return;
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - touchStart.x;
+        const dy = touch.clientY - touchStart.y;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+          setSnakeDirection(dx > 0 ? 'RIGHT' : 'LEFT');
+        } else {
+          setSnakeDirection(dy > 0 ? 'DOWN' : 'UP');
+        }
+        touchStart = null;
+      }, { passive: true });
+    }
+    bindSnakeTouchControls();
+
+    const tracks = ['Bass_Phonk_Special.mp3', 'Hyper_Synthwave_XP.mp3', 'AuraOS_Symphony_6.mp3'];
+    let trackIdx = 0; let mTimer; let mBarVal = 0;
+    function controlMusic(action) {
+      const title = document.getElementById('track-title');
+      const status = document.getElementById('track-status');
+      const bar = document.getElementById('m-bar');
+
+      if (action === 'play') {
+        title.textContent = tracks[trackIdx];
+        status.textContent = 'Status: Playing...';
+        clearInterval(mTimer);
+        mTimer = setInterval(() => {
+          mBarVal = (mBarVal + 5) % 105;
+          bar.style.width = mBarVal + '%';
+        }, 400);
+      } else if (action === 'pause' || action === 'stop') {
+        status.textContent = 'Status: Stopped';
+        clearInterval(mTimer);
+        if (action === 'stop') {
+          mBarVal = 0;
+          bar.style.width = '0%';
+        }
+      } else if (action === 'next') {
+        trackIdx = (trackIdx + 1) % tracks.length;
+        controlMusic('play');
+      } else if (action === 'prev') {
+        trackIdx = (trackIdx - 1 + tracks.length) % tracks.length;
+        controlMusic('play');
+      }
+    }
+
+    function handleCmd(event) {
+      if (event.key === 'Enter') {
+        const field = document.getElementById('cmd-input-field');
+        const history = document.getElementById('cmd-history');
+        const val = field.value.toLowerCase().trim();
+        let output = '';
+
+        if (val === 'help') {
+          output = "Commands:\n version - OS version\n stream_status - Stream status\n virus_test - Malware demo\n snake_stats - Game record\n clear - Clear terminal\n help - List commands";
+        } else if (val === 'version') {
+          output = 'RetroCore Windows 5.0 [Ultimate Stream Edition 2026]';
+        } else if (val === 'stream_status') {
+          output = 'OFF | Start from the taskbar';
+        } else if (val === 'virus_test') {
+          output = 'Launching lab call...';
+          setTimeout(() => runVirusStage1(), 1000);
+        } else if (val === 'snake_stats') {
+          output = 'Best score: ' + maxScore;
+        } else if (val === 'clear') {
+          history.textContent = '';
+          field.value = '';
+          return;
+        } else if (!val) {
+          output = '';
+        } else {
+          output = 'Unknown command: ' + field.value;
+        }
+
+        history.innerHTML += '<div><br> C:\\Angelo_OS> ' + field.value + '<br>' + output.replace(/\n/g, '<br>') + '</div>';
+        field.value = '';
+        const box = document.querySelector('.cmd-box');
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    function playOscillatorSound(freq, duration) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctxAudio = new AudioCtx();
+        const oscillator = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+        oscillator.type = 'square';
+        oscillator.frequency.value = freq;
+        gain.gain.value = 0.03;
+        oscillator.connect(gain);
+        gain.connect(ctxAudio.destination);
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.stop();
+          oscillator.disconnect();
+          gain.disconnect();
+          ctxAudio.close();
+        }, duration);
+      } catch (err) {
+        console.log('Audio not available:', err);
+      }
+    }
+
+    function runVirusStage1() {
+      const box = document.getElementById('virus-lab-body');
+      box.innerHTML = '<h4>Stage 1: Signature Scan</h4><p>Analyzing the desktop layer...</p><button onclick="runVirusStage2()" style="padding:8px 16px; font-weight:bold; cursor:pointer; background:linear-gradient(to bottom,#ff4d4d,#cc0000); color:white; border:1px solid #990000;">Continue</button>';
+      playOscillatorSound(440, 180);
+    }
+    function runVirusStage2() {
+      const box = document.getElementById('virus-lab-body');
+      box.innerHTML = '<h4>Stage 2: Visual Override</h4><p>Injecting graphical pulses...</p><button onclick="runVirusStage3()" style="padding:8px 16px; font-weight:bold; cursor:pointer; background:linear-gradient(to bottom,#ffb347,#d96b00); color:white; border:1px solid #8f4a00;">Override</button>';
+      document.getElementById('virus-ransom-box').style.display = 'block';
+      playOscillatorSound(660, 140);
+    }
+    function runVirusStage3() {
+      const box = document.getElementById('virus-lab-body');
+      box.innerHTML = '<h4>Stage 3: Security Layer Drift</h4><p>Bypassing warning signal...</p><button onclick="runVirusStage4()" style="padding:8px 16px; font-weight:bold; cursor:pointer; background:linear-gradient(to bottom,#a2c8ff,#4a79d8); color:white; border:1px solid #2d4f9f;">Bypass</button>';
+      playOscillatorSound(800, 120);
+    }
+    function runVirusStage4() {
+      document.getElementById('virus-ransom-box').style.display = 'none';
+      document.getElementById('bsod').style.display = 'block';
+      const win = document.getElementById('win-virus');
+      win.classList.add('vibrate-active');
+      setTimeout(() => win.classList.remove('vibrate-active'), 800);
+    }
+    function triggerBsodStage4() {
+      runVirusStage4();
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('digital-clock').textContent = time;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+    startSnake();
+
+    const recycleBin = document.getElementById('recycle-bin-desktop');
+    let dragState = null;
+
+    function getPointerPosition(e) {
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+      icon.addEventListener('pointerdown', (e) => {
+        if (icon.id === 'recycle-bin-desktop') return;
+
+        const rect = icon.getBoundingClientRect();
+        const pointer = getPointerPosition(e);
+
+        dragState = {
+          icon,
+          offsetX: pointer.x - rect.left,
+          offsetY: pointer.y - rect.top,
+          startX: pointer.x,
+          startY: pointer.y
+        };
+
+        const ghost = icon.cloneNode(true);
+        ghost.classList.add('dragging');
+        ghost.style.position = 'fixed';
+        ghost.style.left = rect.left + 'px';
+        ghost.style.top = rect.top + 'px';
+        ghost.style.width = rect.width + 'px';
+        ghost.style.height = rect.height + 'px';
+        ghost.style.zIndex = '999999';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.opacity = '0.9';
+        ghost.setAttribute('id', 'desktop-drag-ghost');
+        document.body.appendChild(ghost);
+
+        dragState.ghost = ghost;
+        icon.classList.add('dragging');
+        icon.setPointerCapture?.(e.pointerId);
+
+        e.preventDefault();
+      });
+
+      icon.addEventListener('pointermove', (e) => {
+        if (!dragState || dragState.icon !== icon) return;
+
+        const pointer = getPointerPosition(e);
+        const ghost = dragState.ghost;
+
+        ghost.style.left = (pointer.x - dragState.offsetX) + 'px';
+        ghost.style.top = (pointer.y - dragState.offsetY) + 'px';
+
+        const recycleRect = recycleBin.getBoundingClientRect();
+        const isOverRecycle = (
+          pointer.x >= recycleRect.left &&
+          pointer.x <= recycleRect.right &&
+          pointer.y >= recycleRect.top &&
+          pointer.y <= recycleRect.bottom
+        );
+
+        recycleBin.style.filter = isOverRecycle ? 'brightness(1.3) drop-shadow(0 0 12px rgba(255,255,255,0.9))' : 'none';
+      });
+
+      icon.addEventListener('pointerup', handleIconDrop);
+      icon.addEventListener('pointercancel', handleIconDrop);
+      icon.addEventListener('lostpointercapture', handleIconDrop);
+    });
+
+    function handleIconDrop(e) {
+      if (!dragState) return;
+
+      const icon = dragState.icon;
+      const ghost = dragState.ghost;
+      const pointer = getPointerPosition(e);
+
+      const recycleRect = recycleBin.getBoundingClientRect();
+      const isOverRecycle =
+        pointer.x >= recycleRect.left &&
+        pointer.x <= recycleRect.right &&
+        pointer.y >= recycleRect.top &&
+        pointer.y <= recycleRect.bottom;
+
+      if (ghost) ghost.remove();
+      icon.classList.remove('dragging');
+
+      if (isOverRecycle) {
+        icon.classList.add('trashed');
+        icon.style.display = 'none';
+        recycleBin.style.filter = 'none';
+        setTimeout(() => { alert('Folder moved to Recycle Bin'); }, 50);
+      } else {
+        recycleBin.style.filter = 'none';
+      }
+
+      dragState = null;
+    }
+
+    document.addEventListener('pointerup', () => {
+      if (dragState) {
+        handleIconDrop({ clientX: dragState.startX, clientY: dragState.startY });
+      }
+    });
+  </script>
+</body>
+</html>
